@@ -10,7 +10,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Estilização CSS personalizada para melhorar a estética geral e colorir os títulos de verde escuro
+# Estilização CSS personalizada
 st.markdown("""
     <style>
     .main-title { font-size: 2.2rem; font-weight: 700; color: #1E3A8A; margin-bottom: 0.5rem; }
@@ -48,12 +48,12 @@ def carregar_dados():
     artigos_ghs = [2, 4, 5, 9, 14, 22, 31, 42, 55, 70, 88, 112, 145, 180, 225, 278, 340, 415, 498, 595, 702, 815, 935, 1060, 1195, 1330]
     
     marcos = {
-        2004: "Publicação da ABNT NBR 10004:2004 (Foco em Lixiviação)",
+        2004: "Publicação da ABNT NBR 10004:2004",
         2010: "Política Nacional de Resíduos Sólidos (Lei nº 12.305/10)",
         2015: "Acordo de Paris (Impulso Climático Global)",
         2023: "Unificação do GHS no Brasil (Nova NBR 14725)",
         2024: "Nova ABNT NBR 10004:2024 (Modelo GHS e LGR)",
-        2025: "Consolidação dos Dados e Metas de Transição"
+        2025: "Consolidação Industrial e Metas de Adequação"
     }
     
     df_mock = pd.DataFrame({
@@ -65,7 +65,7 @@ def carregar_dados():
     return df_mock
 
 df = carregar_dados()
-df = df[df["Ano"] <= 2025] # Garantia dupla contra o ano de 2026
+df = df[df["Ano"] <= 2025] 
 
 col_ano = "Ano"
 col_clima = "Artigos_Residuos_Clima"
@@ -128,7 +128,7 @@ with aba_graficos:
     
     st.markdown("---")
     
-    # Gráfico 2: GHS x Resíduos (Sem dados de 2026 - limitado até 2025)
+    # Gráfico 2: GHS x Resíduos
     st.markdown("#### 2. Tendência de Artigos: GHS ✕ Classificação de Resíduos")
     fig2 = px.line(
         df_filtrado, 
@@ -144,7 +144,7 @@ with aba_graficos:
     
     st.markdown("---")
     
-    # Gráfico 3: Gráfico Combinado + Linhas Limpas de Fundo (Sem clipes/marcações volumosas)
+    # Gráfico 3: Gráfico Combinado
     st.markdown("#### 3. Correlação Científica Integrada e Linhas de Linha do Tempo")
     fig3 = px.line(
         df_filtrado, 
@@ -159,7 +159,6 @@ with aba_graficos:
     nomes_legendas = {col_clima: "Resíduos ✕ Crise Climática", col_ghs: "GHS ✕ Classificação de Resíduos"}
     fig3.for_each_trace(lambda t: t.update(name=nomes_legendas.get(t.name, t.name), line_width=3, marker=dict(size=6)))
     
-    # Adicionando apenas as linhas limpas verticais de fundo
     df_marcos = df_filtrado[df_filtrado[col_marco].notna() & (df_filtrado[col_marco].astype(str).str.strip() != "")]
     for _, row in df_marcos.iterrows():
         fig3.add_vline(x=row["Ano"], line_dash="dash", line_color="#9CA3AF", opacity=0.6)
@@ -169,37 +168,54 @@ with aba_graficos:
 
     st.markdown("---")
 
-    # Gráfico 4: VERSÃO CORRIGIDA E ADAPTADA À SUA SUGESTÃO
+    # Gráfico 4: VERSÃO APERFEIÇOADA COM CORES DISTINTAS POR ANO E HOVER LIMPO
     st.markdown("#### 4. Densidade Científica nos Anos dos Marcos Regulatórios")
-    st.markdown("Este gráfico isola apenas os anos em que ocorreram grandes alterações ou marcos históricos, exibindo o volume absoluto de artigos publicados em cada um desses momentos.")
     
-    # Filtrando apenas os anos que possuem marcos e estruturando para formato de barras agrupadas
+    # Adicionando o Balão Informativo de Dica solicitado
+    st.info("💡 **Dica Interativa:** Passe o mouse sobre as barras de cores diferentes para descobrir qual marco histórico aconteceu em cada ano!")
+    
     df_marcos_filtrados = df_filtrado[df_filtrado[col_marco].notna() & (df_filtrado[col_marco].astype(str).str.strip() != "")].copy()
-    
-    # Transformando os anos em strings/categorias para o Plotly não tratar como escala contínua (evita buracos no eixo X)
     df_marcos_filtrados["Ano_Ref"] = df_marcos_filtrados["Ano"].astype(str)
     
+    # "Melt" para converter as duas colunas de artigos em linhas, facilitando a plotagem em barras agrupadas
+    df_melt = df_marcos_filtrados.melt(
+        id_vars=["Ano_Ref", col_marco], 
+        value_vars=[col_clima, col_ghs],
+        var_name="Tipo_Artigo", 
+        value_name="Quantidade"
+    )
+    df_melt["Tipo_Artigo"] = df_melt["Tipo_Artigo"].map(nomes_legendas)
+
+    # Criando o gráfico colorindo por 'Ano_Ref' para que cada ano tenha uma cor distinta
     fig4 = px.bar(
-        df_marcos_filtrados,
+        df_melt,
         x="Ano_Ref",
-        y=[col_clima, col_ghs],
+        y="Quantidade",
+        color="Ano_Ref",
         barmode="group",
+        facet_col="Tipo_Artigo", # Divide os dois focos de estudo lado a lado para não misturar as métricas
         title="Volume Comparativo de Artigos por Ano de Marco Legal",
-        labels={"value": "Artigos Encontrados", "Ano_Ref": "Ano do Marco Histórico", "variable": "Foco do Estudo"},
-        color_discrete_map={col_clima: "#1E3A8A", col_ghs: "#D97706"},
-        text_auto=True, # Adiciona o número de artigos exatamente acima de cada barra automaticamente
-        hover_data={col_marco: True} # Mostra a descrição da lei/evento ao passar o mouse na barra
+        labels={"Quantidade": "Artigos Encontrados", "Ano_Ref": "Ano do Marco", "Ano_Ref": "Cor por Ano"},
+        text_auto=True
     )
     
-    fig4.for_each_trace(lambda t: t.update(name=nomes_legendas.get(t.name, t.name)))
-    fig4.update_traces(textposition="outside", textfont_size=11)
-    fig4.update_layout(
-        xaxis=dict(type='category', title="Ano do Marco Regulatório"),
-        yaxis=dict(title="Quantidade Total de Artigos"),
-        legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
-        margin=dict(l=40, r=40, t=50, b=40),
-        height=400
+    # Correção cirúrgica do Hover Template: Remove as strings técnicas e formata de forma humanizada
+    fig4.update_traces(
+        textposition="outside", 
+        textfont_size=11,
+        customdata=df_melt[col_marco],
+        hovertemplate="<b>Marco Legal:</b> %{customdata}<br><b>Quantidade de Artigos:</b> %{y}<extra></extra>"
     )
+    
+    fig4.update_layout(
+        yaxis=dict(title="Quantidade Total de Artigos"),
+        margin=dict(l=40, r=40, t=50, b=40),
+        height=450,
+        showlegend=True
+    )
+    
+    # Remove títulos técnicos repetitivos dos subplots (facet_col) para limpar o design
+    fig4.for_each_annotation(lambda a: a.update(text=a.text.split("=")[-1]))
     st.plotly_chart(fig4, use_container_width=True)
 
 
