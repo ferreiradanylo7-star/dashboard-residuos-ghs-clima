@@ -191,4 +191,110 @@ with aba_graficos:
     
     fig4.update_traces(
         textposition="top center",
-        marker
+        marker=dict(size=14, color="#15803D", symbol="diamond"),
+        textfont=dict(size=11, color="#1F2937")
+    )
+    
+    # Customizando e limpando os eixos Y para focar puramente no texto e na linha temporal horizontal
+    fig4.update_layout(
+        yaxis=dict(showgrid=False, zeroline=False, showticklabels=False, title="", range=[0.8, 1.4]),
+        xaxis=dict(showgrid=True, dtick=2),
+        height=300,
+        margin=dict(l=40, r=40, t=50, b=40)
+    )
+    st.plotly_chart(fig4, use_container_width=True)
+
+
+# --- ABA 2: COMPARATIVO NBR 10004 (2004 vs 2024) ---
+with aba_comparativo:
+    st.subheader("🔄 O Salto Normativo: Diferenças Cruciais entre as Versões da ABNT NBR 10004")
+    st.markdown("""
+    A revisão publicada em **2024** alterou radicalmente a lógica de classificação de resíduos sólidos no Brasil, aproximando o país dos padrões mais avançados de segurança química do mundo.
+    """)
+    
+    dados_comparativos = {
+        "Critério de Análise": [
+            "Estrutura de Codificação",
+            "Mecanismo de Toxicidade",
+            "Conexão Internacional",
+            "Foco Principal da Proteção",
+            "Governança e Emissão",
+            "Período de Transição"
+        ],
+        "Versão Anterior (NBR 10004:2004)": [
+            "Listas fixas e estanques nos Anexos A e B sem correspondência setorial moderna.",
+            "Foco quase exclusivo no teste laboratorial de lixiviação (concentração extrativa em água).",
+            "Baixo ou nenhum alinhamento com a classificação de substâncias químicas puras.",
+            "Visão fim-de-linha (End-of-Pipe): Engenharia de proteção ambiental de aterros e águas subterrâneas.",
+            "Laudos genéricos focados em ensaios físicos e químicos brutos.",
+            "Não possuía cronograma de transição gradual estruturado em partes separadas."
+        ],
+        "Nova Versão (NBR 10004:2024)": [
+            "Introdução da LGR (Lista Geral de Resíduos) com códigos hierárquicos de 6 dígitos baseados na origem/atividade.",
+            "Avaliação do perigo intrínseco pela concentração total da substância e aplicação de limites de corte.",
+            "Alinhamento pleno ao GHS da ONU através das atualizações das normas ABNT NBR 14725 e NBR 16725.",
+            "Proteção integrada: Ambiental + Saúde do Trabalhador contra riscos ocupacionais crônicos severos.",
+            "Exigência detalhada de identificação clara do Responsável Técnico legalmente habilitado.",
+            "Vigência de transição estabelecida até 31/12/2026, permitindo coexistência temporária planejada."
+        ]
+    }
+    
+    df_comp_tabela = pd.DataFrame(dados_comparativos)
+    st.table(df_comp_tabela)
+    
+    st.markdown("### 💡 Resumo do Impacto Prático nas Empresas")
+    col_card1, col_card2, col_card3 = st.columns(3)
+    with col_card1:
+        st.markdown("""
+        <div class="section-holder">
+        <div class="green-title">1. Rastreabilidade da Cadeia</div>
+        <p style='font-size:0.9rem; color:#4B5563;'>Com os novos códigos de 6 dígitos da LGR, fica mais fácil rastrear o resíduo desde o processo gerador até o destino final, coibindo desvios indesejados.</p>
+        </div>
+        """, unsafe_allow_html=True)
+    with col_card2:
+        st.markdown("""
+        <div class="section-holder">
+        <div class="green-title">2. Segurança Jurídica</div>
+        <p style='font-size:0.9rem; color:#4B5563;'>O alinhamento com a base de perigos da ECHA (União Europeia) e GHS diminui ambiguidades interpretativas em fiscalizações ou passivos ambientais.</p>
+        </div>
+        """, unsafe_allow_html=True)
+    with col_card3:
+        st.markdown("""
+        <div class="section-holder">
+        <div class="green-title">3. Adequação de FDS/FDSR</div>
+        <p style='font-size:0.9rem; color:#4B5563;'>Resíduos classificados como perigosos por toxicidade crônica exigem obrigatoriamente a emissão da nova FDSR atualizada pelas diretrizes vigentes.</p>
+        </div>
+        """, unsafe_allow_html=True)
+
+
+# --- ABA 3: PARADOXO DA LIXIVIAÇÃO ---
+with aba_lixiviacao:
+    st.subheader("⚠️ Entenda o Cenário: Lixiviação vs. Risco Ocupacional")
+    st.markdown("""
+    A transição conceitual trazida pela nova regulamentação corrige o que especialistas chamavam de **"ponto cego da lixiviação"**. 
+    Veja o contraste fundamental de cenários abaixo:
+    """)
+    
+    col1, col2 = st.columns(2)
+    with col1:
+        st.error("### 🔴 O Cenário Antigo (A NBR 10004:2004)")
+        st.markdown("""
+        * **Mecanismo:** Simulava a ação da chuva ácida sobre o resíduo dentro de um aterro para verificar o arraste de contaminantes para o lençol freático.
+        * **O Ponto Cego:** Se uma substância altamente tóxica (como um composto cancerígeno ou metal pesado insolúvel) estivesse firmemente ligada à matriz do resíduo, o teste laboratorial indicava lixiviação nula ou abaixo do limite regulatório do Anexo C.
+        * **O Resultado:** O laudo declarava o resíduo como **Classe II (Não Perigoso)**. Isso gerava uma falsa sensação de segurança jurídica.
+        * **O Risco Real:** Os trabalhadores da fábrica continuavam expostos de forma direta a poeiras, inalação de vapores e contato dérmico diário com compostos nocivos à saúde humana.
+        """)
+        
+    with col2:
+        st.success("### 🟢 O Cenário Atual (A NBR 10004:2024)")
+        st.markdown("""
+        * **Mecanismo:** Avaliação orientada pela **composição química total intrínseca** do resíduo e pelas regras de agregação de perigo do **GHS**.
+        * **A Mudança de Chave:** Mesmo que o resíduo apresente taxa de lixiviação zero em água, se ele contiver agentes com propriedades mutagênicas, cancerígenas, teratogênicas ou ecotóxicas severas acima das concentrações-limite de corte, será classificado como **Classe 1 (Perigoso)**.
+        * **Foco no Trabalhador:** Expansão direta da proteção à integridade e saúde ocupacional de operadores envolvidos na manipulação, ensacamento, transporte e coprocessamento industrial.
+        * **Economia Circular:** Força as indústrias a buscarem a substituição de matérias-primas perigosas na origem para viabilizar a reintrodução segura de subprodutos em novas cadeias.
+        """)
+
+    st.markdown("---")
+    st.warning("""
+    🔬 **Nota Técnica de Toxicidade (Passo 4 da Norma de 2024):** Os novos desfechos toxicológicos (*endpoints*) considerados englobam: Toxicidade aguda severa, Mutagenicidade em células germinativas, Carcinogenicidade, Toxicidade à reprodução, Toxicidade para órgãos-alvo específicos (STOT por exposição única ou repetida), Perigo por aspiração e Ecotoxicidade crônica/aguda para o meio aquático.
+    """)
