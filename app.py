@@ -41,19 +41,19 @@ def carregar_dados():
         except Exception:
             pass 
             
-    # FALLBACK AUTOMÁTICO: Dados históricos estimados (Anos de 2000 a 2025 para remover o ano de 2026)
+    # FALLBACK AUTOMÁTICO: Dados históricos (Limitado estritamente até 2025)
     anos = list(range(2000, 2026))
     
     artigos_clima = [45, 52, 63, 78, 95, 120, 155, 198, 245, 310, 390, 480, 580, 695, 820, 960, 1120, 1290, 1460, 1650, 1820, 2010, 2190, 2380, 2550, 2720]
     artigos_ghs = [2, 4, 5, 9, 14, 22, 31, 42, 55, 70, 88, 112, 145, 180, 225, 278, 340, 415, 498, 595, 702, 815, 935, 1060, 1195, 1330]
     
     marcos = {
-        2004: "ABNT NBR 10004:2004",
-        2010: "PNRS (Lei nº 12.305/10)",
-        2015: "Acordo de Paris",
-        2023: "Revisão da NBR 16725",
-        2024: "Nova ABNT NBR 10004:2024",
-        2025: "Consolidação GHS"
+        2004: "Publicação da ABNT NBR 10004:2004 (Foco em Lixiviação)",
+        2010: "Política Nacional de Resíduos Sólidos (Lei nº 12.305/10)",
+        2015: "Acordo de Paris (Impulso Climático Global)",
+        2023: "Unificação do GHS no Brasil (Nova NBR 14725)",
+        2024: "Nova ABNT NBR 10004:2024 (Modelo GHS e LGR)",
+        2025: "Consolidação dos Dados e Metas de Transição"
     }
     
     df_mock = pd.DataFrame({
@@ -65,16 +65,14 @@ def carregar_dados():
     return df_mock
 
 df = carregar_dados()
-
-# Garantindo que os dados não ultrapassem 2025 em nenhum lugar do dataframe para atender ao pedido
-df = df[df["Ano"] <= 2025]
+df = df[df["Ano"] <= 2025] # Garantia dupla contra o ano de 2026
 
 col_ano = "Ano"
 col_clima = "Artigos_Residuos_Clima"
 col_ghs = "Artigos_GHS_Residuos"
 col_marco = "Marco_Historico"
 
-# Normalização inteligente de colunas
+# Normalização de colunas
 if "Ano" not in df.columns and "ANO" in df.columns:
     df = df.rename(columns={"ANO": "Ano"})
 
@@ -161,7 +159,7 @@ with aba_graficos:
     nomes_legendas = {col_clima: "Resíduos ✕ Crise Climática", col_ghs: "GHS ✕ Classificação de Resíduos"}
     fig3.for_each_trace(lambda t: t.update(name=nomes_legendas.get(t.name, t.name), line_width=3, marker=dict(size=6)))
     
-    # Adicionando apenas as linhas limpas verticais de fundo, removendo os marcadores de clipe anteriores
+    # Adicionando apenas as linhas limpas verticais de fundo
     df_marcos = df_filtrado[df_filtrado[col_marco].notna() & (df_filtrado[col_marco].astype(str).str.strip() != "")]
     for _, row in df_marcos.iterrows():
         fig3.add_vline(x=row["Ano"], line_dash="dash", line_color="#9CA3AF", opacity=0.6)
@@ -171,36 +169,36 @@ with aba_graficos:
 
     st.markdown("---")
 
-    # Gráfico 4: NOVO GRÁFICO DEDICADO COM OS TEXTOS DOS MARCOS INSERIDOS NO GRÁFICO
-    st.markdown("#### 4. Linha do Tempo Visual: Rótulos Interativos dos Marcos Regulatórios")
-    st.markdown("Este gráfico plota os anos específicos dos marcos históricos contendo os nomes das legislações diretamente integrados à tela.")
+    # Gráfico 4: VERSÃO CORRIGIDA E ADAPTADA À SUA SUGESTÃO
+    st.markdown("#### 4. Densidade Científica nos Anos dos Marcos Regulatórios")
+    st.markdown("Este gráfico isola apenas os anos em que ocorreram grandes alterações ou marcos históricos, exibindo o volume absoluto de artigos publicados em cada um desses momentos.")
     
-    # Filtrando anos válidos que possuem texto para construir o gráfico de linha do tempo integrada
-    df_linha_tempo = df_marcos.copy()
-    # Criamos uma coordenada Y fixa apenas para posicionar os textos em formato de linha do tempo horizontal
-    df_linha_tempo["Posicao_Y"] = 1 
+    # Filtrando apenas os anos que possuem marcos e estruturando para formato de barras agrupadas
+    df_marcos_filtrados = df_filtrado[df_filtrado[col_marco].notna() & (df_filtrado[col_marco].astype(str).str.strip() != "")].copy()
     
-    fig4 = px.scatter(
-        df_linha_tempo,
-        x="Ano",
-        y="Posicao_Y",
-        text=col_marco,
-        title="Linha do Tempo de Legislações Aplicadas (Rótulos Diretos)",
-        labels={"Ano": "Ano de Vigência"}
+    # Transformando os anos em strings/categorias para o Plotly não tratar como escala contínua (evita buracos no eixo X)
+    df_marcos_filtrados["Ano_Ref"] = df_marcos_filtrados["Ano"].astype(str)
+    
+    fig4 = px.bar(
+        df_marcos_filtrados,
+        x="Ano_Ref",
+        y=[col_clima, col_ghs],
+        barmode="group",
+        title="Volume Comparativo de Artigos por Ano de Marco Legal",
+        labels={"value": "Artigos Encontrados", "Ano_Ref": "Ano do Marco Histórico", "variable": "Foco do Estudo"},
+        color_discrete_map={col_clima: "#1E3A8A", col_ghs: "#D97706"},
+        text_auto=True, # Adiciona o número de artigos exatamente acima de cada barra automaticamente
+        hover_data={col_marco: True} # Mostra a descrição da lei/evento ao passar o mouse na barra
     )
     
-    fig4.update_traces(
-        textposition="top center",
-        marker=dict(size=14, color="#15803D", symbol="diamond"),
-        textfont=dict(size=11, color="#1F2937")
-    )
-    
-    # Customizando e limpando os eixos Y para focar puramente no texto e na linha temporal horizontal
+    fig4.for_each_trace(lambda t: t.update(name=nomes_legendas.get(t.name, t.name)))
+    fig4.update_traces(textposition="outside", textfont_size=11)
     fig4.update_layout(
-        yaxis=dict(showgrid=False, zeroline=False, showticklabels=False, title="", range=[0.8, 1.4]),
-        xaxis=dict(showgrid=True, dtick=2),
-        height=300,
-        margin=dict(l=40, r=40, t=50, b=40)
+        xaxis=dict(type='category', title="Ano do Marco Regulatório"),
+        yaxis=dict(title="Quantidade Total de Artigos"),
+        legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
+        margin=dict(l=40, r=40, t=50, b=40),
+        height=400
     )
     st.plotly_chart(fig4, use_container_width=True)
 
@@ -296,5 +294,5 @@ with aba_lixiviacao:
 
     st.markdown("---")
     st.warning("""
-    🔬 **Nota Técnica de Toxicidade (Passo 4 da Norma de 2024):** Os novos desfechos toxicológicos (*endpoints*) considerados englobam: Toxicidade aguda severa, Mutagenicidade em células germinativas, Carcinogenicidade, Toxicidade à reprodução, Toxicidade para órgãos-alvo específicos (STOT por exposição única ou repetida), Perigo por aspiração e Ecotoxicidade crônica/aguda para o meio aquático.
+    🔬 **Nota Técnico-Científica:** Os desfechos toxicológicos considerados englobam: Toxicidade aguda severa, Mutagenicidade em células germinativas, Carcinogenicidade, Toxicidade à reprodução, Toxicidade para órgãos-alvo específicos (STOT por exposição única ou repetida), Perigo por aspiração e Ecotoxicidade crônica/aguda para o meio aquático.
     """)
