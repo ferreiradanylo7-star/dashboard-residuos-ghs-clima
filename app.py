@@ -21,12 +21,12 @@ def carregar_dados():
     try:
         # Tenta ler primeiro com ponto e vírgula (padrão do Excel em português)
         df = pd.read_csv("dados_consolidados.csv", sep=";")
-        if len(df.columns) <= 1: # Se der errado, tenta o padrão de vírgula
+        if len(df.columns) <= 1: 
             df = pd.read_csv("dados_consolidados.csv", sep=",")
     except Exception:
         df = pd.read_csv("dados_consolidados.csv")
     
-    # Remove espaços invisíveis que possam existir nos nomes das colunas
+    # Limpa espaços invisíveis nos nomes das colunas
     df.columns = df.columns.str.strip()
     return df
 
@@ -38,11 +38,10 @@ aba_graficos, aba_lixiviacao = st.tabs(["📈 Linha do Tempo & Artigos", "⚠️
 with aba_graficos:
     st.subheader("Evolução das Publicações Acadêmicas (Google Acadêmico)")
     
-    # Identificar dinamicamente as colunas de artigos para evitar erros de digitação
-    colunas_artigos = [c for c in df.columns if "Artigos" in c]
+    # Identificar dinamicamente as colunas que contêm os dados dos artigos
+    colunas_artigos = [c for c in df.columns if "Artigos" in c or "artigos" in c]
     
     if len(colunas_artigos) > 0:
-        # Criando o gráfico interativo de linhas usando o Plotly
         fig = px.line(
             df, 
             x="Ano", 
@@ -52,32 +51,42 @@ with aba_graficos:
             markers=True
         )
         
-        # Ajusta as legendas de forma amigável
         for trace in fig.data:
-            nome_limpo = trace.name.replace("_", " ")
-            trace.name = nome_limpo
+            trace.name = trace.name.replace("_", " ")
             
         st.plotly_chart(fig, use_container_width=True)
     else:
-        st.warning("⚠️ Nenhuma coluna de artigos encontrada. Verifique se o nome das colunas na sua planilha começa com a palavra 'Artigos'.")
+        st.warning("⚠️ Nenhuma coluna de artigos encontrada. Verifique se os nomes das colunas começam com 'Artigos'.")
     
     st.markdown("---")
     st.subheader("🔍 Linha do Tempo e Contexto dos Marcos Regulatórios")
     
-    # Garante que vai achar a coluna do Marco histórico independente de maiúscula/minúscula
-    col_marco = [c for c in df.columns if "Marco" in c or "marco" in c][0]
-    col_cat = [c for c in df.columns if "Cat" in c or "cat" in c][0]
+    # SOLUÇÃO BLINDADA: Identifica as colunas de texto por exclusão para nunca mais dar erro de índice
+    colunas_texto = [c for c in df.columns if c not in ["Ano", "ANO"] and "Artigos" not in c and "artigos" not in c]
     
-    df_marcos = df[df[col_marco].notna() & (df[col_marco] != "")]
-    
-    if not df_marcos.empty:
-        st.write("Selecione um ano para entender o contexto histórico da época:")
-        ano_selecionado = st.selectbox("Escolha o ano do Marco Histórico:", sorted(df_marcos["Ano"].unique()))
+    if len(colunas_texto) > 0:
+        # A primeira coluna de texto será considerada o Marco Histórico
+        col_marco = colunas_texto[0]
         
-        linha = df_marcos[df_marcos["Ano"] == ano_selecionado].iloc[0]
-        st.info(f"**[{str(linha[col_cat]).upper()}] Em {ano_selecionado}:** {linha[col_marco]}")
+        # Filtra a tabela para pegar apenas as linhas que têm algum texto explicativo escrito
+        df_marcos = df[df[col_marco].notna() & (df[col_marco].astype(str).str.strip() != "")]
+        
+        if not df_marcos.empty:
+            st.write("Selecione um ano para entender o contexto histórico da época:")
+            ano_selecionado = st.selectbox("Escolha o ano do Marco Histórico:", sorted(df_marcos["Ano"].unique()))
+            
+            linha = df_marcos[df_marcos["Ano"] == ano_selecionado].iloc[0]
+            
+            # Se houver uma segunda coluna de texto (ex: Categoria), usamos ela, senão mostramos apenas o Marco
+            if len(colunas_texto) > 1:
+                col_cat = colunas_texto[1]
+                st.info(f"**[{str(linha[col_cat]).upper()}] Em {ano_selecionado}:** {linha[col_marco]}")
+            else:
+                st.info(f"**Em {ano_selecionado}:** {linha[col_marco]}")
+        else:
+            st.info("ℹ️ Nenhum texto de marco histórico detetado nas linhas da planilha.")
     else:
-        st.info("Nenhum texto de marco histórico detectado para exibição.")
+        st.warning("⚠️ Não foi encontrada nenhuma coluna de texto para os marcos históricos na planilha.")
 
 with aba_lixiviacao:
     st.subheader("Fique Atento: Lixiviação vs. Risco Ocupacional na ABNT NBR 10004:2024")
@@ -98,6 +107,6 @@ with aba_lixiviacao:
         st.success("### 🟢 O Cenário Atual (A NBR 10004:2024)")
         st.write("""
         - Alinhamento total com a composição química real e a **Economia Circular**.
-        - Mesmo que um resíduo passe no teste de lixiviação (não solte nada na água), ele pode ser enquadrado como **Classe 1 (Perigoso)** se tiver substâncias cancerígenas, mutagênicos ou de toxicidade crônica severa.
+        - Mesmo que um resíduo passe no teste de lixiviação (não solte nada na água), ele pode ser enquadrado como **Classe 1 (Perigoso)** se tiver substâncias cancerígenas, mutagênicas ou de toxicidade crônica severa.
         - **Foco no Trabalhador:** Proteção direta contra o risco ocupacional por contato ou inalação de poeiras.
         """)
