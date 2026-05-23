@@ -48,12 +48,12 @@ def carregar_dados():
     artigos_ghs = [2, 4, 5, 9, 14, 22, 31, 42, 55, 70, 88, 112, 145, 180, 225, 278, 340, 415, 498, 595, 702, 815, 935, 1060, 1195, 1330]
     
     marcos = {
-        2004: "Publicação da ABNT NBR 10004:2004",
+        2004: "Publicação da ABNT NBR 10004:2004 (Foco em Aterros)",
         2010: "Política Nacional de Resíduos Sólidos (Lei nº 12.305/10)",
         2015: "Acordo de Paris (Impulso Climático Global)",
         2023: "Unificação do GHS no Brasil (Nova NBR 14725)",
         2024: "Nova ABNT NBR 10004:2024 (Modelo GHS e LGR)",
-        2025: "Consolidação Industrial e Metas de Adequação"
+        2025: "Consolidação das Metas de Adequação Industrial"
     }
     
     df_mock = pd.DataFrame({
@@ -168,54 +168,63 @@ with aba_graficos:
 
     st.markdown("---")
 
-    # Gráfico 4: VERSÃO APERFEIÇOADA COM CORES DISTINTAS POR ANO E HOVER LIMPO
-    st.markdown("#### 4. Densidade Científica nos Anos dos Marcos Regulatórios")
+    # Gráfico 4: VERSÃO CORRIGIDA (PLANO ÚNICO ORIGINAL COM CORES VERDE/VERMELHO E HOVER AMPLO)
+    st.markdown("#### 4. Densidade Científica com Destaque para Anos de Marcos Regulatórios")
     
-    # Adicionando o Balão Informativo de Dica solicitado
-    st.info("💡 **Dica Interativa:** Passe o mouse sobre as barras de cores diferentes para descobrir qual marco histórico aconteceu em cada ano!")
+    st.info("💡 **Dica Interativa:** Passe o mouse sobre as barras de cores diferentes. As barras em **Verde** representam anos normais, enquanto as barras em **Vermelho** marcam os anos com Grandes Marcos Históricos!")
     
-    df_marcos_filtrados = df_filtrado[df_filtrado[col_marco].notna() & (df_filtrado[col_marco].astype(str).str.strip() != "")].copy()
-    df_marcos_filtrados["Ano_Ref"] = df_marcos_filtrados["Ano"].astype(str)
+    # Preparando os dados para plotagem contínua no eixo X
+    df_m4 = df_filtrado.copy()
+    df_m4["Ano_Ref"] = df_m4["Ano"].astype(str)
     
-    # "Melt" para converter as duas colunas de artigos em linhas, facilitando a plotagem em barras agrupadas
-    df_melt = df_marcos_filtrados.melt(
-        id_vars=["Ano_Ref", col_marco], 
+    # Cria uma coluna para mapear o status de cor
+    df_m4["Status_Ano"] = df_m4[col_marco].apply(lambda x: "Ano com Marco Histórico" if str(x).strip() != "" else "Ano Comum")
+    
+    # Realiza o pivot/melt para separar as barras de Clima e GHS por ano
+    df_melt4 = df_m4.melt(
+        id_vars=["Ano_Ref", "Status_Ano", col_marco],
         value_vars=[col_clima, col_ghs],
-        var_name="Tipo_Artigo", 
+        var_name="Foco do Estudo",
         value_name="Quantidade"
     )
-    df_melt["Tipo_Artigo"] = df_melt["Tipo_Artigo"].map(nomes_legendas)
+    df_melt4["Foco do Estudo"] = df_melt4["Foco do Estudo"].map(nomes_legendas)
 
-    # Criando o gráfico colorindo por 'Ano_Ref' para que cada ano tenha uma cor distinta
+    # Criação do gráfico em formato agrupado (barmode='group') igual ao print original
     fig4 = px.bar(
-        df_melt,
+        df_melt4,
         x="Ano_Ref",
         y="Quantidade",
-        color="Ano_Ref",
+        color="Status_Ano", # Divide os grupos de cores baseado no critério do marco
         barmode="group",
-        facet_col="Tipo_Artigo", # Divide os dois focos de estudo lado a lado para não misturar as métricas
-        title="Volume Comparativo de Artigos por Ano de Marco Legal",
-        labels={"Quantidade": "Artigos Encontrados", "Ano_Ref": "Ano do Marco", "Ano_Ref": "Cor por Ano"},
+        title="Volume de Artigos Científicos (Destaque para Anos Regulatórios)",
+        labels={"Quantidade": "Artigos Encontrados", "Ano_Ref": "Ano", "Status_Ano": "Legenda de Impacto"},
+        color_discrete_map={
+            "Ano Comum": "#22C55E",           # Verde para anos normais
+            "Ano com Marco Histórico": "#EF4444"  # Vermelho para anos regulatórios
+        },
         text_auto=True
     )
     
-    # Correção cirúrgica do Hover Template: Remove as strings técnicas e formata de forma humanizada
+    # Ajustando o Hover e garantindo que o texto do Marco Histórico não quebre ou fique escondido
     fig4.update_traces(
         textposition="outside", 
-        textfont_size=11,
-        customdata=df_melt[col_marco],
-        hovertemplate="<b>Marco Legal:</b> %{customdata}<br><b>Quantidade de Artigos:</b> %{y}<extra></extra>"
+        textfont_size=10,
+        customdata=df_melt4[[col_marco, "Foco do Estudo"]],
+        hovertemplate="""
+        <b>Ano: %{x}</b><br>
+        <b>Tema da Pesquisa:</b> %{customdata[1]}<br>
+        <b>Artigos Publicados:</b> %{y}<br>
+        <b>Histórico:</b> %{customdata[0]}<extra></extra>
+        """
     )
     
     fig4.update_layout(
+        xaxis=dict(type='category', title="Evolução Temporal (Anos)"),
         yaxis=dict(title="Quantidade Total de Artigos"),
+        legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
         margin=dict(l=40, r=40, t=50, b=40),
-        height=450,
-        showlegend=True
+        height=500
     )
-    
-    # Remove títulos técnicos repetitivos dos subplots (facet_col) para limpar o design
-    fig4.for_each_annotation(lambda a: a.update(text=a.text.split("=")[-1]))
     st.plotly_chart(fig4, use_container_width=True)
 
 
