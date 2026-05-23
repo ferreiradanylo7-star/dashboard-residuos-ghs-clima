@@ -28,51 +28,83 @@ evidenciando a transição da engenharia sanitária tradicional para a era da Ec
 </div>
 """, unsafe_allow_html=True)
 
-# 2. Leitura dos Dados com Fallback Automático Robustecido
+# 2. Leitura dos Dados com Dicionário Oficial de Marcos Históricos
 @st.cache_data
 def carregar_dados():
+    # Dicionário exato fornecido pelo usuário
+    marcos_oficiais = {
+        1972: "Conferência de Estocolmo e Criação do PNUMA (Ano Zero da consciência ambiental global).",
+        1973: "Criação da SEMA (Secretaria Especial do Meio Ambiente) no Brasil.",
+        1981: "Instituição da PNMA (Política Nacional do Meio Ambiente - Lei nº 6.938) no Brasil.",
+        1987: "Publicação da primeira versão da ABNT NBR 10004 (Foco em aterros).",
+        1989: "Publicação do 'Livro Azul' pela OMS/PNUMA: 'The Management of Hazardous Wastes'.",
+        1992: "Eco-92 no Rio de Janeiro (Adoção da Agenda 21 e Convenção do Clima).",
+        1994: "Publicação da primeira versão do Catálogo Europeu de Resíduos (EWC).",
+        1997: "Assinatura do Protocolo de Kyoto (Primeiras metas rígidas de emissões climáticas).",
+        1998: "Sanção da Lei de Crimes Ambientais (Lei nº 9.605) no Brasil.",
+        2000: "União Europeia reformula e unifica seu Catálogo Harmonizado de Resíduos.",
+        2002: "Entrada em vigor do Catálogo Europeu padronizado em códigos de 6 dígitos.",
+        2003: "Publicação oficial da 1ª Edição do GHS pela ONU (O 'Livro Roxo').",
+        2004: "Publicação da segunda versão da ABNT NBR 10004 (Consolidação de lixiviação/solubilização).",
+        2008: "União Europeia adota o Regulamento CLP, integrando o GHS aos critérios de perigo.",
+        2010: "Instituição da Política Nacional de Resíduos Sólidos (PNRS - Lei nº 12.305).",
+        2012: "Publicada a Instrução Normativa 13 do Ibama, a Lista Brasileira de Resíduos Sólidos",
+        2014: "União Europeia revisa seu Catálogo de Resíduos para alinhá-lo 100% ao GHS.",
+        2015: "Assinatura do Acordo de Paris (COP21) e lançamento dos ODS da ONU.",
+        2018: "Política da 'Espada Nacional' da China (Proibição da importação de resíduos plásticos mundiais).",
+        2020: "Aprovação do Novo Marco Legal do Saneamento Básico (Lei nº 14.026) no Brasil.",
+        2022: "Publicação do Planares (Plano Nacional de Resíduos Sólidos) com metas de redução de metano.",
+        2024: "Publicação da Nova ABNT NBR 10004 (Partes 1 e 2), adotando a LGR (6 dígitos) e o GHS."
+    }
+
     if os.path.exists("dados_consolidados.csv"):
         try:
             df = pd.read_csv("dados_consolidados.csv", sep=";")
             if len(df.columns) <= 1: 
                 df = pd.read_csv("dados_consolidados.csv", sep=",")
             df.columns = df.columns.str.strip()
+            
+            # Garante que o texto dos marcos seja atualizado para a versão oficial fornecida
+            if "Ano" in df.columns or "ANO" in df.columns:
+                col_ano_local = "Ano" if "Ano" in df.columns else "ANO"
+                df["Marco_Historico"] = df[col_ano_local].map(marcos_oficiais).fillna("")
             return df
         except Exception:
             pass 
             
-    # FALLBACK AUTOMÁTICO: Dados históricos (Limitado estritamente até 2025)
-    anos = list(range(2000, 2026))
+    # FALLBACK AUTOMÁTICO COMPLETO (Abrangendo de 1972 até 2025 para comportar a nova lista)
+    anos = list(range(1972, 2026))
+    artigos_clima = []
+    artigos_ghs = []
     
-    artigos_clima = [45, 52, 63, 78, 95, 120, 155, 198, 245, 310, 390, 480, 580, 695, 820, 960, 1120, 1290, 1460, 1650, 1820, 2010, 2190, 2380, 2550, 2720]
-    artigos_ghs = [2, 4, 5, 9, 14, 22, 31, 42, 55, 70, 88, 112, 145, 180, 225, 278, 340, 415, 498, 595, 702, 815, 935, 1060, 1195, 1330]
-    
-    marcos = {
-        2004: "Publicação da ABNT NBR 10004:2004 (Foco em Aterros)",
-        2010: "Política Nacional de Resíduos Sólidos (Lei nº 12.305/10)",
-        2015: "Acordo de Paris (Impulso Climático Global)",
-        2023: "Unificação do GHS no Brasil (Nova NBR 14725)",
-        2024: "Nova ABNT NBR 10004:2024 (Modelo GHS e LGR)",
-        2025: "Consolidação das Metas de Adequação Industrial"
-    }
-    
+    # Geração de curvas de crescimento condizentes para o novo intervalo histórico alargado
+    for val_ano in anos:
+        if val_ano < 2000:
+            artigos_clima.append(int(5 + (val_ano - 1972) * 1.5))
+            artigos_ghs.append(0) # GHS não existia antes de 2000/2003
+        else:
+            # Mantém a tendência exponencial a partir dos anos 2000
+            idx = val_ano - 2000
+            artigos_clima.append(45 + idx * 105)
+            artigos_ghs.append(2 + idx * 53 if val_ano >= 2003 else 0)
+            
     df_mock = pd.DataFrame({
         "Ano": anos,
-        "Artigos_Residuos_Clima": artigos_clima[:len(anos)],
-        "Artigos_GHS_Residuos": artigos_ghs[:len(anos)],
-        "Marco_Historico": [marcos.get(ano, "") for _ , ano in enumerate(anos)]
+        "Artigos_Residuos_Clima": artigos_clima,
+        "Artigos_GHS_Residuos": artigos_ghs,
+        "Marco_Historico": [marcos_oficiais.get(a, "") for a in anos]
     })
     return df_mock
 
 df = carregar_dados()
-df = df[df["Ano"] <= 2025] 
+df = df[df["Ano"] <= 2025] # Limitado estritamente até 2025
 
 col_ano = "Ano"
 col_clima = "Artigos_Residuos_Clima"
 col_ghs = "Artigos_GHS_Residuos"
 col_marco = "Marco_Historico"
 
-# Normalização de colunas
+# Normalização padrão de colunas
 if "Ano" not in df.columns and "ANO" in df.columns:
     df = df.rename(columns={"ANO": "Ano"})
 
@@ -95,7 +127,7 @@ if col_marco not in df.columns: df[col_marco] = df[colunas_texto[0]] if len(colu
 # 3. Menu Lateral (Sidebar)
 st.sidebar.header("⚙️ Filtros e Parâmetros")
 ano_min, ano_max = st.sidebar.slider(
-    "Selecione o Intervalo de Anos:",
+    "Selecione o Intervalo de Anos Gerais:",
     int(df["Ano"].min()), int(df["Ano"].max()),
     (int(df["Ano"].min()), int(df["Ano"].max()))
 )
@@ -129,7 +161,7 @@ with aba_graficos:
     st.markdown("---")
     
     # Gráfico 2: GHS x Resíduos
-    st.markdown("#### 2. Tendência de Artigos: GHS ✕ Classificação de Resíduos")
+    st.markdown("#### 2. Tendência de Artigos: GHS ✕ Classification de Resíduos")
     fig2 = px.line(
         df_filtrado, 
         x="Ano", 
@@ -161,69 +193,64 @@ with aba_graficos:
     
     df_marcos = df_filtrado[df_filtrado[col_marco].notna() & (df_filtrado[col_marco].astype(str).str.strip() != "")]
     for _, row in df_marcos.iterrows():
-        fig3.add_vline(x=row["Ano"], line_dash="dash", line_color="#9CA3AF", opacity=0.6)
+        fig3.add_vline(x=row["Ano"], line_dash="dash", line_color="#9CA3AF", opacity=0.5)
             
     fig3.update_layout(hovermode="x unified", legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1))
     st.plotly_chart(fig3, use_container_width=True)
 
     st.markdown("---")
 
-    # Gráfico 4: VERSÃO CORRIGIDA (PLANO ÚNICO ORIGINAL COM CORES VERDE/VERMELHO E HOVER AMPLO)
-    st.markdown("#### 4. Densidade Científica com Destaque para Anos de Marcos Regulatórios")
+    # Gráfico 4: APENAS MARCOS HISTÓRICOS OFICIAIS + COR AZUL UNIFICADA + HOVER COMPLETO
+    st.markdown("#### 4. Densidade Científica nos Anos dos Marcos Regulatórios")
     
-    st.info("💡 **Dica Interativa:** Passe o mouse sobre as barras de cores diferentes. As barras em **Verde** representam anos normais, enquanto as barras em **Vermelho** marcam os anos com Grandes Marcos Históricos!")
+    st.info("💡 **Dica Interativa:** Passe o mouse sobre as barras azuis para ler o texto integral de cada marco histórico!")
     
-    # Preparando os dados para plotagem contínua no eixo X
-    df_m4 = df_filtrado.copy()
-    df_m4["Ano_Ref"] = df_m4["Ano"].astype(str)
+    # Filtragem estrita e sem lacunas (eixo categórico string) mantendo apenas anos com marcos históricos válidos
+    df_marcos_exclusivos = df_filtrado[df_filtrado[col_marco].notna() & (df_filtrado[col_marco].astype(str).str.strip() != "")].copy()
     
-    # Cria uma coluna para mapear o status de cor
-    df_m4["Status_Ano"] = df_m4[col_marco].apply(lambda x: "Ano com Marco Histórico" if str(x).strip() != "" else "Ano Comum")
+    # Ordena pelo ano de forma crescente para manter a ordem cronológica perfeita na tela
+    df_marcos_exclusivos = df_marcos_exclusivos.sort_values(by="Ano")
+    df_marcos_exclusivos["Ano_Ref"] = df_marcos_exclusivos["Ano"].astype(str)
     
-    # Realiza o pivot/melt para separar as barras de Clima e GHS por ano
-    df_melt4 = df_m4.melt(
-        id_vars=["Ano_Ref", "Status_Ano", col_marco],
+    # Reestruturação de dados para formato agrupado
+    df_melt4 = df_marcos_exclusivos.melt(
+        id_vars=["Ano_Ref", col_marco],
         value_vars=[col_clima, col_ghs],
         var_name="Foco do Estudo",
         value_name="Quantidade"
     )
     df_melt4["Foco do Estudo"] = df_melt4["Foco do Estudo"].map(nomes_legendas)
 
-    # Criação do gráfico em formato agrupado (barmode='group') igual ao print original
+    # Criação do gráfico em Azul Unificado (#1E3A8A) sem lacunas temporárias
     fig4 = px.bar(
         df_melt4,
         x="Ano_Ref",
         y="Quantidade",
-        color="Status_Ano", # Divide os grupos de cores baseado no critério do marco
+        color_discrete_sequence=["#1E3A8A"],
         barmode="group",
-        title="Volume de Artigos Científicos (Destaque para Anos Regulatórios)",
-        labels={"Quantidade": "Artigos Encontrados", "Ano_Ref": "Ano", "Status_Ano": "Legenda de Impacto"},
-        color_discrete_map={
-            "Ano Comum": "#22C55E",           # Verde para anos normais
-            "Ano com Marco Histórico": "#EF4444"  # Vermelho para anos regulatórios
-        },
+        title="Volume de Artigos Científicos nos Anos dos Marcos Regulatórios Oficiais",
+        labels={"Quantidade": "Artigos Encontrados", "Ano_Ref": "Ano do Marco Histórico"},
         text_auto=True
     )
     
-    # Ajustando o Hover e garantindo que o texto do Marco Histórico não quebre ou fique escondido
+    # Customização minuciosa do Hover para exibir o texto completo do Marco Histórico de forma estruturada e sem cortes
     fig4.update_traces(
         textposition="outside", 
         textfont_size=10,
         customdata=df_melt4[[col_marco, "Foco do Estudo"]],
         hovertemplate="""
-        <b>Ano: %{x}</b><br>
-        <b>Tema da Pesquisa:</b> %{customdata[1]}<br>
+        <b>Ano do Marco: %{x}</b><br>
+        <b>Tema Estudado:</b> %{customdata[1]}<br>
         <b>Artigos Publicados:</b> %{y}<br>
-        <b>Histórico:</b> %{customdata[0]}<extra></extra>
+        <b>Especificação do Marco:</b> %{customdata[0]}<extra></extra>
         """
     )
     
     fig4.update_layout(
-        xaxis=dict(type='category', title="Evolução Temporal (Anos)"),
+        xaxis=dict(type='category', title="Linha do Tempo Cronológica dos Marcos"),
         yaxis=dict(title="Quantidade Total de Artigos"),
-        legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
         margin=dict(l=40, r=40, t=50, b=40),
-        height=500
+        height=550
     )
     st.plotly_chart(fig4, use_container_width=True)
 
