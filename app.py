@@ -15,11 +15,19 @@ Este painel interativo correlaciona o crescimento da produção científica mund
 evidenciando a transição da engenharia sanitária tradicional para a era da Economia Circular e avaliação de riscos toxicológicos.
 """)
 
-# 2. Leitura dos Dados do Repositório
+# 2. Leitura dos Dados com detecção automática de separador (; ou ,)
 @st.cache_data
 def carregar_dados():
-    # Carrega o CSV que você subiu no repositório
-    df = pd.read_csv("dados_consolidados.csv")
+    try:
+        # Tenta ler primeiro com ponto e vírgula (padrão do Excel em português)
+        df = pd.read_csv("dados_consolidados.csv", sep=";")
+        if len(df.columns) <= 1: # Se der errado, tenta o padrão de vírgula
+            df = pd.read_csv("dados_consolidados.csv", sep=",")
+    except Exception:
+        df = pd.read_csv("dados_consolidados.csv")
+    
+    # Remove espaços invisíveis que possam existir nos nomes das colunas
+    df.columns = df.columns.str.strip()
     return df
 
 df = carregar_dados()
@@ -30,36 +38,46 @@ aba_graficos, aba_lixiviacao = st.tabs(["📈 Linha do Tempo & Artigos", "⚠️
 with aba_graficos:
     st.subheader("Evolução das Publicações Acadêmicas (Google Acadêmico)")
     
-    # Criando o gráfico interativo de linhas usando o Plotly
-    fig = px.line(
-        df, 
-        x="Ano", 
-        y=["Artigos_Clima_Residuos", "Artigos_GHS_Residuos"],
-        labels={"value": "Quantidade de Artigos", "variable": "Foco da Pesquisa", "Ano": "Ano"},
-        title="Tendência de Artigos Científicos por Ano",
-        markers=True
-    )
+    # Identificar dinamicamente as colunas de artigos para evitar erros de digitação
+    colunas_artigos = [c for c in df.columns if "Artigos" in c]
     
-    # Customizando as legendas para ficarem bonitas em português
-    novos_nomes = {"Artigos_Clima_Residuos": "Crise Climática + Resíduos", "Artigos_GHS_Residuos": "GHS + Resíduos"}
-    fig.for_each_trace(lambda t: t.update(name = novos_nomes[t.name]))
-    
-    # Plotando o gráfico na tela
-    st.plotly_chart(fig, use_container_width=True)
+    if len(colunas_artigos) > 0:
+        # Criando o gráfico interativo de linhas usando o Plotly
+        fig = px.line(
+            df, 
+            x="Ano", 
+            y=colunas_artigos,
+            labels={"value": "Quantidade de Artigos", "variable": "Foco da Pesquisa", "Ano": "Ano"},
+            title="Tendência de Artigos Científicos por Ano",
+            markers=True
+        )
+        
+        # Ajusta as legendas de forma amigável
+        for trace in fig.data:
+            nome_limpo = trace.name.replace("_", " ")
+            trace.name = nome_limpo
+            
+        st.plotly_chart(fig, use_container_width=True)
+    else:
+        st.warning("⚠️ Nenhuma coluna de artigos encontrada. Verifique se o nome das colunas na sua planilha começa com a palavra 'Artigos'.")
     
     st.markdown("---")
     st.subheader("🔍 Linha do Tempo e Contexto dos Marcos Regulatórios")
-    st.write("Mova a barra ou selecione um ano para entender o contexto histórico da época:")
     
-    # Caixa de seleção baseada nos anos da sua planilha que possuem marcos escritos
-    df_marcos = df[df["Marco_Historico"].notna()]
-    ano_selecionado = st.selectbox("Escolha o ano do Marco Histórico:", df_marcos["Ano"].unique())
+    # Garante que vai achar a coluna do Marco histórico independente de maiúscula/minúscula
+    col_marco = [c for c in df.columns if "Marco" in c or "marco" in c][0]
+    col_cat = [c for c in df.columns if "Cat" in c or "cat" in c][0]
     
-    # Buscando a linha correspondente ao ano selecionado
-    linha = df_marcos[df_marcos["Ano"] == ano_selecionado].iloc[0]
+    df_marcos = df[df[col_marco].notna() & (df[col_marco] != "")]
     
-    # Exibindo o marco histórico de forma destacada
-    st.info(f"**[{linha['Categoria'].upper()}] Em {ano_selecionado}:** {linha['Marco_Historico']}")
+    if not df_marcos.empty:
+        st.write("Selecione um ano para entender o contexto histórico da época:")
+        ano_selecionado = st.selectbox("Escolha o ano do Marco Histórico:", sorted(df_marcos["Ano"].unique()))
+        
+        linha = df_marcos[df_marcos["Ano"] == ano_selecionado].iloc[0]
+        st.info(f"**[{str(linha[col_cat]).upper()}] Em {ano_selecionado}:** {linha[col_marco]}")
+    else:
+        st.info("Nenhum texto de marco histórico detectado para exibição.")
 
 with aba_lixiviacao:
     st.subheader("Fique Atento: Lixiviação vs. Risco Ocupacional na ABNT NBR 10004:2024")
@@ -80,6 +98,6 @@ with aba_lixiviacao:
         st.success("### 🟢 O Cenário Atual (A NBR 10004:2024)")
         st.write("""
         - Alinhamento total com a composição química real e a **Economia Circular**.
-        - Mesmo que um resíduo passe no teste de lixiviação (não solte nada na água), ele pode ser enquadrado como **Classe 1 (Perigoso)** se tiver substâncias cancerígenas, mutagênicas ou de toxicidade crônica severa.
+        - Mesmo que um resíduo passe no teste de lixiviação (não solte nada na água), ele pode ser enquadrado como **Classe 1 (Perigoso)** se tiver substâncias cancerígenas, mutagênicos ou de toxicidade crônica severa.
         - **Foco no Trabalhador:** Proteção direta contra o risco ocupacional por contato ou inalação de poeiras.
         """)
