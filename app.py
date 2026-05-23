@@ -232,7 +232,25 @@ with aba_graficos:
         labels={"Quantidade": "Artigos Encontrados", "Ano_Ref": "Ano do Marco Histórico"},
         text_auto=True
     )
+    fig4 = px.bar(
+        df_melt4,
+        x="Ano_Ref",
+        y="Quantidade",
+        color="Foco do Estudo", # Usar cor para diferenciar grupos
+        barmode="group",
+        title="Volume de Artigos Científicos nos Anos dos Marcos Regulatórios",
+        labels={"Quantidade": "Artigos", "Ano_Ref": "Ano"},
+        text_auto=True
+    )
     
+    # Ajuste de layout para legibilidade
+    fig4.update_layout(
+        bargap=0.3,       # Espaço entre grupos
+        bargroupgap=0.1,  # Espaço entre barras do mesmo grupo
+        height=600,
+        margin=dict(t=80, b=50),
+        legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
+    )
     # Customização minuciosa do Hover para exibir o texto completo do Marco Histórico de forma estruturada e sem cortes
     fig4.update_traces(
         textposition="outside", 
@@ -347,3 +365,28 @@ with aba_lixiviacao:
     st.warning("""
     🔬 **Nota Técnico-Científica:** Os desfechos toxicológicos considerados englobam: Toxicidade aguda severa, Mutagenicidade em células germinativas, Carcinogenicidade, Toxicidade à reprodução, Toxicidade para órgãos-alvo específicos (STOT por exposição única ou repetida), Perigo por aspiração e Ecotoxicidade crônica/aguda para o meio aquático.
     """)
+
+# --- ABA 4: RESUMO EXECUTIVO ---
+# Coloque esta aba na lista de abas:
+# aba_graficos, aba_comparativo, aba_lixiviacao, aba_resumo = st.tabs([... "📌 Resumo Executivo"])
+
+with aba_resumo:
+    st.subheader("📌 Infográfico Resumido: A Nova Era da NBR 10004")
+    
+    col1, col2 = st.columns([1, 1])
+    with col1:
+        st.markdown("""
+        ### 🔄 Transição Estrutural
+        * **Antigo:** Foco em lixiviação e aterros (NBR 2004).
+        * **Novo:** Foco em perigo intrínseco e GHS (NBR 2024).
+        * **Codificação:** Mudança de listas fixas para a **LGR (6 dígitos)**.
+        """)
+    with col2:
+        st.markdown("""
+        ### 🎯 Objetivos Principais
+        * **Proteção:** Saúde do Trabalhador + Ambiental.
+        * **Transição:** Prazo até 31/12/2026.
+        * **Visão:** Economia Circular e Rastreabilidade.
+        """)
+    
+    st.info("💡 **A grande mudança:** O resíduo agora é classificado pelo que ele **é** (química), não apenas pelo que ele **solta** (lixiviado).")
