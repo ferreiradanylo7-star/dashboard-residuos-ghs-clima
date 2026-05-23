@@ -254,42 +254,6 @@ with aba_graficos:
     )
     st.plotly_chart(fig4, use_container_width=True)
 
-# Gráfico 4: Corrigido com espaçamento otimizado para não sobrepor os números
-    fig4 = px.bar(
-        df_melt4,
-        x="Ano_Ref",
-        y="Quantidade",
-        color_discrete_sequence=["#1E3A8A"],
-        barmode="group", # Mantém agrupado lado a lado
-        title="Volume de Artigos Científicos nos Anos dos Marcos Regulatórios Oficiais",
-        labels={"Quantidade": "Artigos Encontrados", "Ano_Ref": "Ano do Marco Histórico"},
-        text_auto=".0f" # Formata para número inteiro, garantindo clareza
-    )
-    
-    # Ajustes finos para separar os elementos visuais
-    fig4.update_traces(
-        textposition="outside",  # Força os números para fora das barras
-        textfont_size=11,
-        textangle=0,            # Garante que os números fiquem na horizontal
-        customdata=df_melt4[[col_marco, "Foco do Estudo"]],
-        hovertemplate="""
-        <b>Ano: %{x}</b><br>
-        <b>Tema:</b> %{customdata[1]}<br>
-        <b>Artigos:</b> %{y}<br>
-        <b>Marco:</b> %{customdata[0]}<extra></extra>
-        """
-    )
-    
-    fig4.update_layout(
-        xaxis=dict(type='category', title="Linha do Tempo Cronológica dos Marcos"),
-        yaxis=dict(title="Quantidade Total de Artigos"),
-        margin=dict(l=40, r=40, t=50, b=40),
-        height=550,
-        bargap=0.2,           # Aumenta o espaço entre os grupos de barras (anos)
-        bargroupgap=0.1       # Aumenta o espaço entre as barras dentro do grupo
-    )
-    st.plotly_chart(fig4, use_container_width=True)
-
 # --- ABA 2: COMPARATIVO NBR 10004 (2004 vs 2024) ---
 with aba_comparativo:
     st.subheader("🔄 O Salto Normativo: Diferenças Cruciais entre as Versões da ABNT NBR 10004")
