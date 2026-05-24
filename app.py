@@ -221,22 +221,23 @@ with aba_graficos:
     )
     df_melt4["Foco do Estudo"] = df_melt4["Foco do Estudo"].map(nomes_legendas)
 
-    # Criação do gráfico em Azul Unificado (#1E3A8A) sem lacunas temporárias
+    # Criação do gráfico em Azul Unificado (#1E3A8A) sem text_auto=True automático
     fig4 = px.bar(
         df_melt4,
         x="Ano_Ref",
         y="Quantidade",
-        color_discrete_sequence=["#1E3A8A"],
+        color="Foco do Estudo", # Usar color para diferenciar as colunas dentro do grupo
+        color_discrete_sequence=["#1E3A8A", "#4B5563"], # Adicione uma cor secundária se necessário ou use uma paleta
         barmode="group",
         title="Volume de Artigos Científicos nos Anos dos Marcos Regulatórios Oficiais",
-        labels={"Quantidade": "Artigos Encontrados", "Ano_Ref": "Ano do Marco Histórico"},
-        text_auto=True
+        labels={"Quantidade": "Artigos Encontrados", "Ano_Ref": "Ano do Marco Histórico"}
     )
     
-    # Customização minuciosa do Hover para exibir o texto completo do Marco Histórico de forma estruturada e sem cortes
+    # Customização minuciosa do Hover e dos Rótulos
     fig4.update_traces(
-        textposition="outside", 
-        textfont_size=10,
+        texttemplate="%{y}", # Exibe o valor do eixo Y
+        textposition="outside", # Coloca o texto fora da barra
+        cliponaxis=False, # Impede que o texto seja cortado se a barra for muito alta
         customdata=df_melt4[[col_marco, "Foco do Estudo"]],
         hovertemplate="""
         <b>Ano do Marco: %{x}</b><br>
@@ -248,10 +249,12 @@ with aba_graficos:
     
     fig4.update_layout(
         xaxis=dict(type='category', title="Linha do Tempo Cronológica dos Marcos"),
-        yaxis=dict(title="Quantidade Total de Artigos"),
-        margin=dict(l=40, r=40, t=50, b=40),
-        height=550
+        yaxis=dict(title="Quantidade Total de Artigos", automargin=True), # automargin ajuda a não cortar textos
+        legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
+        margin=dict(l=40, r=40, t=100, b=40), # Aumentei o 't' (topo) para dar espaço aos rótulos
+        height=600 # Aumentei um pouco a altura para acomodar os números fora das barras
     )
+    
     st.plotly_chart(fig4, use_container_width=True)
 
 # --- ABA 2: COMPARATIVO NBR 10004 (2004 vs 2024) ---
