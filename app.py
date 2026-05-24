@@ -351,65 +351,72 @@ with aba_lixiviacao:
     st.warning("""
     🔬 **Nota Técnico-Científica:** Os desfechos toxicológicos considerados englobam: Toxicidade aguda severa, Mutagenicidade em células germinativas, Carcinogenicidade, Toxicidade à reprodução, Toxicidade para órgãos-alvo específicos (STOT por exposição única ou repetida), Perigo por aspiração e Ecotoxicidade crônica/aguda para o meio aquático.
     """)
-with aba_resumo_tecnico:
-    st.header("📋 Infográfico Técnico: A Nova Era da Gestão de Resíduos")
-    
-    # Linha de cabeçalho do resumo
-    st.markdown("""
-    Este painel resume a transição paradigmática da norma de classificação de resíduos no Brasil, 
-    movendo-se de uma visão puramente física para uma abordagem **Toxicológica Integrada (GHS/ONU)**.
-    """)
-    
-    # Layout em Grid para o "Infográfico"
-    c1, c2 = st.columns([1, 1])
-    
-    with c1:
-        st.markdown("""
-        <div class="section-holder">
-        <h3 style="color:#1E3A8A;">1. Fundamentos da Mudança</h3>
-        <ul>
-            <li><b>Paradigma:</b> De ensaios de lixiviação (água) para <b>Composição Química Total</b>.</li>
-            <li><b>Normatização:</b> Alinhamento direto com o <b>GHS (ONU)</b> - ABNT NBR 14725.</li>
-            <li><b>Abrangência:</b> Foco estendido para Saúde do Trabalhador e Riscos Crônicos.</li>
-        </ul>
-        </div>
-        """, unsafe_allow_html=True)
-        
-        st.markdown("""
-        <div class="section-holder">
-        <h3 style="color:#1E3A8A;">3. Fluxo de Classificação</h3>
-        <ol>
-            <li>Enquadramento na <b>LGR</b> (Códigos 6 dígitos).</li>
-            <li>Identificação de constituintes químicos (Base ECHA/LSCT).</li>
-            <li>Aplicação das regras de corte (Limites de concentração).</li>
-            <li>Determinação de Periculosidade (Classe 1 ou 2).</li>
-        </ol>
-        </div>
-        """, unsafe_allow_html=True)
+# --- ABA 4: RESUMO TÉCNICO ---
 
-    with c2:
-        st.markdown("""
-        <div class="section-holder">
-        <h3 style="color:#1E3A8A;">2. Pilares de Risco</h3>
-        <p>A nova 10004 foca em 8 categorias críticas de perigo:</p>
-        <ul>
-            <li>Toxicidade Aguda (H300-332)</li>
-            <li>Mutagenicidade & Carcinogenicidade (H340-351)</li>
-            <li>Toxicidade à Reprodução (H360-361)</li>
-            <li>STOT (Exposição Única/Repetida)</li>
-            <li>Ecotoxicidade (H400-420)</li>
-        </ul>
-        </div>
-        """, unsafe_allow_html=True)
-        
-        st.info("💡 **Conclusão Técnica:** A classificação não é mais um laudo de aterro, mas um **documento de conformidade química de ciclo de vida**, exigindo Responsável Técnico habilitado.")
+with aba_resumo_tecnico:
+    st.header("📊 Resumo Técnico: A Nova ABNT NBR 10004:2024")
+    
+    st.markdown("""
+    Este infográfico técnico sintetiza a mudança de paradigma na classificação de resíduos sólidos no Brasil. 
+    A transição da versão 2004 para a 2024 marca a adoção de uma **abordagem toxicológica baseada no GHS (ONU)**, 
+    priorizando a saúde ocupacional e a segurança química sobre o antigo modelo focado estritamente em lixiviação.
+    """, unsafe_allow_html=True)
+
+    # Cards técnicos com cores ajustadas
+    col1, col2, col3 = st.columns(3)
+    
+    # CSS interno para garantir a cor azul
+    style_card = """
+    <div style="padding: 1.5rem; border-radius: 0.5rem; background-color: #F3F4F6; color: #1E3A8A; border-left: 5px solid #1E3A8A; height: 100%;">
+    """
+    
+    with col1:
+        st.markdown(f"{style_card}<h3>1. Novo Paradigma (SGCR)</h3>"
+                    "<p>A norma institui o <b>SGCR-10004</b>. A classificação deixa de ser um 'ensaio' para se tornar um processo estruturado de <b>conhecimento do resíduo</b>.</p>"
+                    "<ul><li>Identificação da origem (LGR)</li><li>Conhecimento dos constituintes químicos</li></ul>"
+                    "</div>", unsafe_allow_html=True)
+    
+    with col2:
+        st.markdown(f"{style_card}<h3>2. Fim do Ponto Cego</h3>"
+                    "<p>O foco sai da lixiviação (água) e vai para a <b>Composição Química Total</b>. O resíduo é perigoso se contiver agentes químicos perigosos (cancerígenos, mutagênicos) acima dos limites de corte, independente de sua estabilidade física.</p>"
+                    "</div>", unsafe_allow_html=True)
+                    
+    with col3:
+        st.markdown(f"{style_card}<h3>3. Responsabilidade Técnica</h3>"
+                    "<p>A norma exige formalmente a emissão do <b>LCR (Laudo de Classificação de Resíduos)</b>, que <b>deve</b> ser elaborado por um <b>Responsável Técnico</b> habilitado, garantindo rastreabilidade e responsabilidade legal do gerador.</p>"
+                    "</div>", unsafe_allow_html=True)
 
     st.markdown("---")
-    st.subheader("Cronologia do Salto Regulatório")
-    # Tabela resumo estilizada
-    resumo_cron = pd.DataFrame({
-        "Marco": ["1987", "2004", "2010", "2024"],
-        "Foco": ["Aterros", "Lixiviação", "PNRS (Política)", "GHS/Saúde"],
-        "Impacto": ["Pioneiro", "Consolidação", "Gestão/Responsabilidade", "Segurança Química"]
+
+    # Detalhamento Técnico Profundo
+    c_left, c_right = st.columns([1, 1])
+    
+    with c_left:
+        st.subheader("💡 O Fluxo de Classificação (Passos)")
+        st.write("""
+        A ABNT NBR 10004-1:2024 define um fluxograma decisório rigoroso:
+        1. **Passo 1 (Enquadramento):** Uso da **Lista Geral de Resíduos (LGR)** (Códigos de 6 dígitos). Identificação de entradas perigosas ou não perigosas.
+        2. **Passo 2 (POP):** Verificação de Poluentes Orgânicos Persistentes (Convenção de Estocolmo).
+        3. **Passo 3 (Perigos Físico-Químicos):** Avaliação de Inflamabilidade, Corrosividade, Reatividade e Patogenicidade.
+        4. **Passo 4 (Toxicidade GHS):** Aplicação das regras de corte do GHS para toxicidade aguda, mutagenicidade, carcinogenicidade, toxicidade reprodutiva (teratogenicidade), STOT e ecotoxicidade.
+        """)
+        
+    with c_right:
+        st.subheader("⚠️ Desfechos Toxicológicos (Endpoints)")
+        st.info("""
+        A classificação agora integra desfechos cruciais que antes eram negligenciados em laudos de lixiviação:
+        * **Mutagenicidade:** Alterações genéticas em células germinativas.
+        * **Carcinogenicidade:** Capacidade de induzir câncer por exposição.
+        * **Toxicidade à Reprodução:** Efeitos adversos nas funções sexuais e fertilidade.
+        * **STOT (Toxicidade para Órgãos-Alvo):** Efeitos severos por exposição única ou repetida.
+        * **Ecotoxicidade:** Riscos crônicos/agudos para o meio aquático e biota.
+        """)
+
+    st.markdown("---")
+    st.subheader("Tabela de Comparação Normativa: O Salto Tecnológico")
+    resumo_tecnico = pd.DataFrame({
+        "Critério": ["Ensaio Principal", "Foco da Segurança", "Alinhamento Global", "Validade"],
+        "Versão 2004": ["Lixiviação/Solubilização", "Aterro e Água (End-of-Pipe)", "Baixo/Nenhum", "Genérica"],
+        "Versão 2024": ["Composição Total", "Saúde Ocupacional/Humana", "Pleno (GHS/ONU)", "Data de Revisão/RT"]
     })
-    st.table(resumo_cron)
+    st.table(resumo_tecnico)
