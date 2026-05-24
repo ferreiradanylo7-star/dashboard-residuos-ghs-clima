@@ -134,10 +134,11 @@ ano_min, ano_max = st.sidebar.slider(
 df_filtrado = df[(df["Ano"] >= ano_min) & (df["Ano"] <= ano_max)]
 
 # 4. Organização das Abas
-aba_graficos, aba_comparativo, aba_lixiviacao = st.tabs([
+aba_graficos, aba_comparativo, aba_lixiviacao, aba_resumo_tecnico = st.tabs([
     "📈 Linha do Tempo & Artigos", 
     "🔍 Comparativo NBR 10004 (2004 vs 2024)", 
-    "⚠️ O Paradoxo da Lixiviação"
+    "⚠️ O Paradoxo da Lixiviação",
+    "📊 Resumo Executivo Técnico"
 ])
 
 # --- ABA 1: GRÁFICOS DE TENDÊNCIA ---
@@ -350,3 +351,65 @@ with aba_lixiviacao:
     st.warning("""
     🔬 **Nota Técnico-Científica:** Os desfechos toxicológicos considerados englobam: Toxicidade aguda severa, Mutagenicidade em células germinativas, Carcinogenicidade, Toxicidade à reprodução, Toxicidade para órgãos-alvo específicos (STOT por exposição única ou repetida), Perigo por aspiração e Ecotoxicidade crônica/aguda para o meio aquático.
     """)
+with aba_resumo_tecnico:
+    st.header("📋 Infográfico Técnico: A Nova Era da Gestão de Resíduos")
+    
+    # Linha de cabeçalho do resumo
+    st.markdown("""
+    Este painel resume a transição paradigmática da norma de classificação de resíduos no Brasil, 
+    movendo-se de uma visão puramente física para uma abordagem **Toxicológica Integrada (GHS/ONU)**.
+    """)
+    
+    # Layout em Grid para o "Infográfico"
+    c1, c2 = st.columns([1, 1])
+    
+    with c1:
+        st.markdown("""
+        <div class="section-holder">
+        <h3 style="color:#1E3A8A;">1. Fundamentos da Mudança</h3>
+        <ul>
+            <li><b>Paradigma:</b> De ensaios de lixiviação (água) para <b>Composição Química Total</b>.</li>
+            <li><b>Normatização:</b> Alinhamento direto com o <b>GHS (ONU)</b> - ABNT NBR 14725.</li>
+            <li><b>Abrangência:</b> Foco estendido para Saúde do Trabalhador e Riscos Crônicos.</li>
+        </ul>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        st.markdown("""
+        <div class="section-holder">
+        <h3 style="color:#1E3A8A;">3. Fluxo de Classificação</h3>
+        <ol>
+            <li>Enquadramento na <b>LGR</b> (Códigos 6 dígitos).</li>
+            <li>Identificação de constituintes químicos (Base ECHA/LSCT).</li>
+            <li>Aplicação das regras de corte (Limites de concentração).</li>
+            <li>Determinação de Periculosidade (Classe 1 ou 2).</li>
+        </ol>
+        </div>
+        """, unsafe_allow_html=True)
+
+    with c2:
+        st.markdown("""
+        <div class="section-holder">
+        <h3 style="color:#1E3A8A;">2. Pilares de Risco</h3>
+        <p>A nova 10004 foca em 8 categorias críticas de perigo:</p>
+        <ul>
+            <li>Toxicidade Aguda (H300-332)</li>
+            <li>Mutagenicidade & Carcinogenicidade (H340-351)</li>
+            <li>Toxicidade à Reprodução (H360-361)</li>
+            <li>STOT (Exposição Única/Repetida)</li>
+            <li>Ecotoxicidade (H400-420)</li>
+        </ul>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        st.info("💡 **Conclusão Técnica:** A classificação não é mais um laudo de aterro, mas um **documento de conformidade química de ciclo de vida**, exigindo Responsável Técnico habilitado.")
+
+    st.markdown("---")
+    st.subheader("Cronologia do Salto Regulatório")
+    # Tabela resumo estilizada
+    resumo_cron = pd.DataFrame({
+        "Marco": ["1987", "2004", "2010", "2024"],
+        "Foco": ["Aterros", "Lixiviação", "PNRS (Política)", "GHS/Saúde"],
+        "Impacto": ["Pioneiro", "Consolidação", "Gestão/Responsabilidade", "Segurança Química"]
+    })
+    st.table(resumo_cron)
